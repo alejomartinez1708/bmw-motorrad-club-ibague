@@ -55,6 +55,35 @@ function SH({title,color}){return <div style={{fontSize:12,fontWeight:700,fontFa
 const fullName=(m)=>[m.first_name,m.second_name,m.first_lastname,m.second_lastname].filter(Boolean).join(" ");
 const initials=(m)=>{const n=fullName(m);return n.split(" ").map(w=>w[0]).slice(0,2).join("");};
 
+/* Image upload to Supabase Storage */
+const uploadImage=async(file)=>{
+  const ext=file.name.split(".").pop();
+  const name=`${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const{data,error}=await supabase.storage.from("images").upload(name,file,{cacheControl:"3600",upsert:false});
+  if(error) throw error;
+  const{data:{publicUrl}}=supabase.storage.from("images").getPublicUrl(name);
+  return publicUrl;
+};
+
+function ImageUpload({value,onChange,label="Imagen"}){
+  const[uploading,setUploading]=useState(false);
+  const handleFile=async(e)=>{
+    const file=e.target.files?.[0];if(!file)return;
+    setUploading(true);
+    try{const url=await uploadImage(file);onChange(url);}
+    catch(err){alert("Error al subir: "+err.message);}
+    finally{setUploading(false);}
+  };
+  const copyUrl=()=>{if(value){navigator.clipboard.writeText(value);alert("URL copiada!");}};
+  return <Field label={label}><div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+    <input style={{...IS,flex:1}} value={value||""} onChange={e=>onChange(e.target.value)} placeholder="https://... o sube una imagen"/>
+    <label className="bh" style={{...BPblue,cursor:"pointer",flexShrink:0,fontSize:12,padding:"10px 14px"}}>{uploading?"Subiendo...":"Subir"}<input type="file" accept="image/*" onChange={handleFile} style={{display:"none"}} disabled={uploading}/></label>
+    {value&&<button type="button" onClick={copyUrl} className="bh" style={{...BG,flexShrink:0,fontSize:12,padding:"10px 14px"}}>Copiar URL</button>}
+  </div>
+  {value&&<img src={value} alt="" style={{width:120,height:80,objectFit:"cover",borderRadius:6,marginTop:8,border:"1px solid var(--g2)"}}/>}
+  </Field>;
+}
+
 /* ── MEMBERSHIP CARD ── */
 function MembershipCard({member}){
   const fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"}):"—";
@@ -172,7 +201,7 @@ function MemberForm({member,onSave,onCancel}){
     </G>
     <G cols={2}>
       <Field label="Rol"><select style={IS} value={f.role} onChange={e=>u("role",e.target.value)}>{ROLES.map(r=><option key={r}>{r}</option>)}</select></Field>
-      <Field label="Foto URL"><input style={IS} value={f.photo_url||""} onChange={e=>u("photo_url",e.target.value)} placeholder="https://..."/></Field>
+      <ImageUpload label="Foto del Miembro" value={f.photo_url} onChange={v=>u("photo_url",v)}/>
     </G>
     <div style={{display:"flex",justifyContent:"flex-end",gap:10,marginTop:12}}><button onClick={onCancel} className="bh" style={BG}>Cancelar</button><button onClick={h} className="bh" style={BP}>Guardar Miembro</button></div>
   </>;
@@ -193,7 +222,7 @@ function EventForm({event,onSave,onCancel}){
       <Field label="Hora"><input style={IS} type="time" value={f.time||""} onChange={e=>u("time",e.target.value)}/></Field>
       <Field label="Ciudad"><input style={IS} value={f.city} onChange={e=>u("city",e.target.value)}/></Field>
       <Field label="Lugar *" span><input style={IS} value={f.location} onChange={e=>u("location",e.target.value)}/></Field>
-      <Field label="Imagen URL" span><input style={IS} placeholder="https://..." value={f.image||""} onChange={e=>u("image",e.target.value)}/></Field>
+      <ImageUpload label="Imagen del Evento" value={f.image} onChange={v=>u("image",v)}/>
       <Field label="Descripción" span><textarea style={{...IS,minHeight:70,resize:"vertical"}} value={f.description||""} onChange={e=>u("description",e.target.value)}/></Field>
     </div>
     <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:"var(--g7)",marginBottom:8}}><input type="checkbox" checked={f.featured||false} onChange={e=>u("featured",e.target.checked)} style={{accentColor:"var(--acc)",width:16,height:16}}/> Evento Destacado</label>

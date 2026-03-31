@@ -349,8 +349,8 @@ export default function App(){
     <div style={{background:"var(--w)",minHeight:"100vh",color:"var(--bk)"}}>
       {/* NAV */}
       <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,.92)",backdropFilter:"blur(16px)",borderBottom:"1px solid var(--g2)"}}>
-        <div style={{...W,display:"flex",alignItems:"center",justifyContent:"space-between",height:64}}>
-          <div style={{cursor:"pointer",display:"flex",alignItems:"center",gap:10}} onClick={()=>setPage("home")}><img src={LOGO_NAV} alt="BMW Motorrad Club Ibagué Colombia" style={{height:44}}/></div>
+        <div style={{...W,display:"flex",alignItems:"center",justifyContent:"space-between",height:80}}>
+          <div style={{cursor:"pointer",display:"flex",alignItems:"center",gap:10}} onClick={()=>setPage("home")}><img src={LOGO_NAV} alt="BMW Motorrad Club Ibagué Colombia" style={{height:70}}/></div>
           <div style={{display:"flex",alignItems:"center"}}>
             {[["home","Inicio"],["members","Miembros"],["events","Eventos"]].map(([k,l])=> <button key={k} className={`nl ${page===k?"ac":""}`} onClick={()=>setPage(k)} style={{padding:"8px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"var(--fh)",fontWeight:page===k?700:500,color:page===k?"var(--bk)":"var(--g5)"}}>{l}</button>)}
             {isAdmin?<button className={`nl ${page==="admin"?"acb":""}`} onClick={()=>setPage("admin")} style={{padding:"8px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"var(--fh)",fontWeight:page==="admin"?700:500,color:page==="admin"?"var(--acc)":"var(--g5)"}}>Admin</button>
@@ -362,14 +362,15 @@ export default function App(){
 
       {/* HOME */}
       {page==="home"&&<>
-        <div style={{position:"relative",overflow:"hidden",minHeight:420}}>
+        <div style={{position:"relative",overflow:"hidden",minHeight:420,background:"var(--bk)"}}>
           {/* Background image */}
-          <div style={{position:"absolute",inset:0,backgroundImage:"url(https://images.unsplash.com/photo-1635073908681-b4dfbd6015e8?q=80&w=1470&auto=format&fit=crop)",backgroundSize:"cover",backgroundPosition:"center 40%"}}/>
+          <div style={{position:"absolute",inset:0,backgroundImage:"url(https://images.unsplash.com/photo-1635073908681-b4dfbd6015e8?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0)",backgroundSize:"cover",backgroundPosition:"center 40%"}}/>
           {/* Dark overlay */}
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to right, rgba(0,0,0,.85) 0%, rgba(0,0,0,.5) 50%, rgba(0,0,0,.2) 100%)"}}/>
-          <Tri/>
+          {/* Tricolor */}
+          <div style={{position:"relative",zIndex:2}}><Tri/></div>
           {/* Content */}
-          <div style={{position:"relative",zIndex:1,padding:"60px 32px 48px",maxWidth:1200,margin:"0 auto"}}>
+          <div style={{position:"relative",zIndex:2,padding:"60px 32px 48px",maxWidth:1200,margin:"0 auto"}}>
             <div className="rise" style={{maxWidth:480}}>
               <img src={LOGO_HERO} alt="Club Logo" style={{height:160,marginBottom:20}}/>
               <div style={{width:48,height:2,background:"var(--acc)",marginBottom:20,borderRadius:1}}/>

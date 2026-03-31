@@ -349,8 +349,8 @@ export default function App(){
     <div style={{background:"var(--w)",minHeight:"100vh",color:"var(--bk)"}}>
       {/* NAV */}
       <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid var(--g2)"}}>
-        <div style={{...W,display:"flex",alignItems:"center",justifyContent:"space-between",height:100}}>
-          <div style={{cursor:"pointer",display:"flex",alignItems:"center",gap:10}} onClick={()=>setPage("home")}><img src={LOGO_NAV} alt="BMW Motorrad Club Ibagué Colombia" style={{height:88}}/></div>
+        <div style={{...W,display:"flex",alignItems:"center",justifyContent:"space-between",height:130}}>
+          <div style={{cursor:"pointer",display:"flex",alignItems:"center",gap:10}} onClick={()=>setPage("home")}><img src={LOGO_NAV} alt="BMW Motorrad Club Ibagué Colombia" style={{height:120}}/></div>
           <div style={{display:"flex",alignItems:"center"}}>
             {[["home","Inicio"],["members","Miembros"],["events","Eventos"]].map(([k,l])=> <button key={k} className={`nl ${page===k?"ac":""}`} onClick={()=>setPage(k)} style={{padding:"8px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"var(--fh)",fontWeight:page===k?700:500,color:page===k?"var(--bk)":"var(--g5)"}}>{l}</button>)}
             {isAdmin?<button className={`nl ${page==="admin"?"acb":""}`} onClick={()=>setPage("admin")} style={{padding:"8px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"var(--fh)",fontWeight:page==="admin"?700:500,color:page==="admin"?"var(--acc)":"var(--g5)"}}>Admin</button>

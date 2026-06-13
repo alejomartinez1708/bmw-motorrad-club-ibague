@@ -316,6 +316,86 @@ function MemberDetail({member,onEdit,showCard,setShowCard}){
 }
 
 /* ══════════ MAIN APP ══════════ */
+/* ── PORTAL PROFILE (member self-edit) ── */
+function PortalProfile({member,onSave}){
+  const[f,setF]=useState({...member});
+  const[saved,setSaved]=useState(false);
+  const u=(k,v)=>{setF(p=>({...p,[k]:v}));setSaved(false);};
+  const h=()=>{onSave(f);setSaved(true);setTimeout(()=>setSaved(false),3000);};
+  return <>
+    <p style={{fontSize:14,color:"var(--g5)",marginBottom:20}}>Actualiza tus datos para que tu carnet quede completo.</p>
+    <FG cols={2}>
+      <Field label="Primer Nombre"><input style={IS} value={f.first_name||""} onChange={e=>u("first_name",e.target.value)}/></Field>
+      <Field label="Segundo Nombre"><input style={IS} value={f.second_name||""} onChange={e=>u("second_name",e.target.value)}/></Field>
+      <Field label="Primer Apellido"><input style={IS} value={f.first_lastname||""} onChange={e=>u("first_lastname",e.target.value)}/></Field>
+      <Field label="Segundo Apellido"><input style={IS} value={f.second_lastname||""} onChange={e=>u("second_lastname",e.target.value)}/></Field>
+    </FG>
+    <SH title="Contacto"/>
+    <FG cols={2}>
+      <Field label="Telefono"><input style={IS} value={f.phone||""} onChange={e=>u("phone",e.target.value)}/></Field>
+      <Field label="Email"><input style={IS} type="email" value={f.email||""} onChange={e=>u("email",e.target.value)}/></Field>
+      <Field label="Direccion" span><input style={IS} value={f.address||""} onChange={e=>u("address",e.target.value)}/></Field>
+      <Field label="Ciudad"><input style={IS} value={f.city||""} onChange={e=>u("city",e.target.value)}/></Field>
+      <Field label="Departamento"><input style={IS} value={f.department||""} onChange={e=>u("department",e.target.value)}/></Field>
+    </FG>
+    <SH title="Datos Medicos"/>
+    <FG cols={2}>
+      <Field label="EPS"><input style={IS} value={f.eps||""} onChange={e=>u("eps",e.target.value)}/></Field>
+      <Field label="Tipo de Sangre (RH)"><select style={IS} value={f.blood_type||"O+"} onChange={e=>u("blood_type",e.target.value)}>{["O+","O-","A+","A-","B+","B-","AB+","AB-"].map(t=><option key={t}>{t}</option>)}</select></Field>
+      <Field label="Alergias" span><input style={IS} value={f.allergies||""} onChange={e=>u("allergies",e.target.value)} placeholder="Ninguna"/></Field>
+    </FG>
+    <SH title="Contacto de Emergencia"/>
+    <FG cols={2}>
+      <Field label="Nombre Contacto"><input style={IS} value={f.emerg_name||""} onChange={e=>u("emerg_name",e.target.value)}/></Field>
+      <Field label="Parentesco"><input style={IS} value={f.emerg_relationship||""} onChange={e=>u("emerg_relationship",e.target.value)}/></Field>
+      <Field label="Telefono Emergencia 1"><input style={IS} value={f.emerg_phone1||""} onChange={e=>u("emerg_phone1",e.target.value)}/></Field>
+      <Field label="Telefono Emergencia 2"><input style={IS} value={f.emerg_phone2||""} onChange={e=>u("emerg_phone2",e.target.value)}/></Field>
+    </FG>
+    <ImageUpload label="Foto de Perfil" value={f.photo_url} onChange={v=>u("photo_url",v)}/>
+    <div style={{display:"flex",justifyContent:"flex-end",gap:12,marginTop:16}}>
+      {saved&&<span style={{fontSize:13,color:"var(--grn)",fontWeight:600,alignSelf:"center"}}>Datos guardados</span>}
+      <button className="bh" style={BP} onClick={h}>Guardar Cambios</button>
+    </div>
+  </>;
+}
+
+/* ── MEMBER AUTH MODAL ── */
+function MemberAuthModal({mode,onSwitch,onLogin,onRegister,onClose}){
+  const[email,setEmail]=useState("");
+  const[pass,setPass]=useState("");
+  const[fn,setFn]=useState("");
+  const[ln,setLn]=useState("");
+  const[err,setErr]=useState("");
+  const[busy,setBusy]=useState(false);
+  const handleSubmit=async()=>{
+    setErr("");setBusy(true);
+    if(mode==="register"){
+      if(!email||!pass||!fn||!ln){setErr("Completa todos los campos");setBusy(false);return;}
+      if(pass.length<6){setErr("La contraseña debe tener al menos 6 caracteres");setBusy(false);return;}
+      const r=await onRegister(email,pass,fn,ln);
+      if(r.error) setErr(r.error);
+    }else{
+      if(!email||!pass){setErr("Ingresa email y contraseña");setBusy(false);return;}
+      const r=await onLogin(email,pass);
+      if(r.error) setErr(r.error);
+    }
+    setBusy(false);
+  };
+  return <Modal open onClose={onClose} title={mode==="register"?"Crear Cuenta de Socio":"Iniciar Sesion"}>
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      {mode==="register"&&<>
+        <Field label="Primer Nombre"><input style={IS} value={fn} onChange={e=>setFn(e.target.value)} placeholder="Como aparece en el club"/></Field>
+        <Field label="Primer Apellido"><input style={IS} value={ln} onChange={e=>setLn(e.target.value)} placeholder="Como aparece en el club"/></Field>
+      </>}
+      <Field label="Email"><input style={IS} type="email" value={email} onChange={e=>setEmail(e.target.value)}/></Field>
+      <Field label="Contraseña"><input style={IS} type="password" value={pass} onChange={e=>setPass(e.target.value)}/></Field>
+      {err&&<div style={{padding:"10px 14px",background:"#fef2f2",borderRadius:6,color:"var(--red)",fontSize:13}}>{err}</div>}
+      <button className="bh" style={BP} onClick={handleSubmit} disabled={busy}>{busy?"Procesando...":mode==="register"?"Crear Cuenta":"Entrar"}</button>
+      <div style={{textAlign:"center",fontSize:13,color:"var(--g5)"}}>{mode==="register"?<>Ya tienes cuenta? <button onClick={()=>onSwitch("login")} style={{background:"none",border:"none",color:"var(--acc)",cursor:"pointer",fontWeight:600,fontSize:13}}>Iniciar Sesion</button></>:<>No tienes cuenta? <button onClick={()=>onSwitch("register")} style={{background:"none",border:"none",color:"var(--acc)",cursor:"pointer",fontWeight:600,fontSize:13}}>Crear Cuenta</button></>}</div>
+    </div>
+  </Modal>;
+}
+
 export default function App(){
   const[page,setPage]=useState("home");
   const[adminTab,setAdminTab]=useState("members");
@@ -337,12 +417,22 @@ export default function App(){
   const[loading,setLoading]=useState(true);
   const[partners,setPartners]=useState([]);
   const[modalP,setModalP]=useState(null);
+  const[memberUser,setMemberUser]=useState(null);// logged-in member record
+  const[portalTab,setPortalTab]=useState("perfil");
+  const[showMemberAuth,setShowMemberAuth]=useState(null);// "login"|"register"|null
   const isAdmin=!!user;
 
   // Check auth + load data
   useEffect(()=>{
-    supabase.auth.getSession().then(({data:{session}})=>{setUser(session?.user||null);});
-    const{data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{setUser(session?.user||null);});
+    const checkSession=async(u)=>{
+      if(!u) return;
+      const{data:adm}=await supabase.from("admin_users").select("id").eq("user_id",u.id).single();
+      if(adm){setUser(u);return;}
+      const{data:mems}=await supabase.from("members").select("*").eq("auth_id",u.id);
+      if(mems&&mems.length>0){setMemberUser(mems[0]);}
+    };
+    supabase.auth.getSession().then(({data:{session}})=>{if(session?.user)checkSession(session.user);});
+    const{data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{if(session?.user)checkSession(session.user);else{setUser(null);setMemberUser(null);}});
     loadData();
     return()=>subscription.unsubscribe();
   },[]);
@@ -363,7 +453,7 @@ export default function App(){
   };
 
   const handleLogin=()=>{setShowLogin(false);setPage("admin");loadData();};
-  const handleLogout=async()=>{await supabase.auth.signOut();setUser(null);setPage("home");};
+  const handleLogout=async()=>{await supabase.auth.signOut();setUser(null);setMemberUser(null);setPage("home");};
 
   // CRUD Members
   const saveMember=async(m)=>{
@@ -396,6 +486,51 @@ export default function App(){
     setModalP(null);loadData();
   };
   const deletePartner=async(id)=>{await supabase.from("partners").delete().eq("id",id);setDel(null);loadData();};
+
+  // Member Portal Auth
+  const memberRegister=async(email,password,firstName,lastName)=>{
+    const fn=firstName.trim().toLowerCase(),ln=lastName.trim().toLowerCase();
+    const match=members.find(m=>m.first_name?.toLowerCase()===fn&&m.first_lastname?.toLowerCase()===ln);
+    if(!match) return{error:"No se encontro un miembro con ese nombre. Verifica que estas registrado en el club."};
+    if(match.auth_id) return{error:"Este miembro ya tiene una cuenta creada. Usa iniciar sesion."};
+    const{data,error}=await supabase.auth.signUp({email,password});
+    if(error) return{error:error.message};
+    const uid=data.user?.id;
+    if(uid){await supabase.from("members").update({auth_id:uid,email}).eq("id",match.id);}
+    setMemberUser({...match,auth_id:uid,email});
+    setShowMemberAuth(null);setPage("portal");loadData();
+    return{ok:true};
+  };
+  const memberLogin=async(email,password)=>{
+    const{data,error}=await supabase.auth.signInWithPassword({email,password});
+    if(error) return{error:"Email o contraseña incorrectos"};
+    const uid=data.user?.id;
+    // Check if admin
+    const{data:adm}=await supabase.from("admin_users").select("id").eq("user_id",uid).single();
+    if(adm){setUser(data.user);setShowMemberAuth(null);setPage("admin");return{ok:true};}
+    // Check if member
+    const m=members.find(m=>m.auth_id===uid);
+    if(m){setMemberUser(m);setShowMemberAuth(null);setPage("portal");return{ok:true};}
+    // Auth exists but not linked - try by email
+    const mByEmail=members.find(m=>m.email?.toLowerCase()===email.toLowerCase());
+    if(mByEmail&&!mByEmail.auth_id){
+      await supabase.from("members").update({auth_id:uid}).eq("id",mByEmail.id);
+      setMemberUser({...mByEmail,auth_id:uid});setShowMemberAuth(null);setPage("portal");loadData();return{ok:true};
+    }
+    return{error:"No se encontro un miembro vinculado a esta cuenta."};
+  };
+  const updateMyProfile=async(data)=>{
+    if(!memberUser) return;
+    await supabase.from("members").update(data).eq("id",memberUser.id);
+    setMemberUser(p=>({...p,...data}));loadData();
+  };
+  const toggleMyEvent=async(eventId)=>{
+    if(!memberUser) return;
+    const exists=regs.find(r=>r.event_id===eventId&&r.member_id===memberUser.id);
+    if(exists){await supabase.from("event_registrations").delete().eq("event_id",eventId).eq("member_id",memberUser.id);}
+    else{await supabase.from("event_registrations").insert({event_id:eventId,member_id:memberUser.id});}
+    loadData();
+  };
 
   // Registrations
   const toggleReg=async(eventId,memberId)=>{
@@ -430,9 +565,12 @@ export default function App(){
           <div style={{cursor:"pointer",display:"flex",alignItems:"center",gap:10}} onClick={()=>setPage("home")}><img src={LOGO_NAV} alt="BMW Motorrad Club Ibagué Colombia" style={{height:120}}/></div>
           <div className="mob-nav-links" style={{display:"flex",alignItems:"center"}}>
             {[["home","Inicio"],["members","Miembros"],["events","Eventos"],["aliados","Aliados"]].map(([k,l])=> <button key={k} className={`nl ${page===k?"ac":""}`} onClick={()=>setPage(k)} style={{padding:"8px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"var(--fh)",fontWeight:page===k?700:500,color:page===k?"var(--bk)":"var(--g5)"}}>{l}</button>)}
+            {memberUser?<button className={`nl ${page==="portal"?"ac":""}`} onClick={()=>setPage("portal")} style={{padding:"8px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"var(--fh)",fontWeight:page==="portal"?700:500,color:page==="portal"?"var(--grn)":"var(--g5)"}}>Mi Cuenta</button>
+            :!isAdmin&&<button className="bh" onClick={()=>setShowMemberAuth("login")} style={{marginLeft:8,padding:"6px 16px",background:"none",border:"1px solid var(--g2)",borderRadius:6,cursor:"pointer",fontSize:12,fontFamily:"var(--fh)",fontWeight:600,color:"var(--g5)"}}>Mi Cuenta</button>}
             {isAdmin?<button className={`nl ${page==="admin"?"acb":""}`} onClick={()=>setPage("admin")} style={{padding:"8px 20px",background:"none",border:"none",cursor:"pointer",fontSize:13,fontFamily:"var(--fh)",fontWeight:page==="admin"?700:500,color:page==="admin"?"var(--acc)":"var(--g5)"}}>Admin</button>
             :<button className="bh" onClick={()=>setShowLogin(true)} style={{marginLeft:8,padding:"6px 16px",background:"none",border:"1px solid var(--g2)",borderRadius:6,cursor:"pointer",fontSize:12,fontFamily:"var(--fh)",fontWeight:600,color:"var(--g5)",display:"flex",alignItems:"center",gap:5}}><Ic d={ic.lock} s={14} c="var(--g5)"/>Admin</button>}
             {isAdmin&&<button className="bh" onClick={handleLogout} style={{marginLeft:4,padding:"6px 12px",background:"none",border:"none",cursor:"pointer"}} title="Cerrar sesión"><Ic d={ic.logout} s={16} c="var(--g5)"/></button>}
+            {memberUser&&!isAdmin&&<button className="bh" onClick={handleLogout} style={{marginLeft:4,padding:"6px 12px",background:"none",border:"none",cursor:"pointer"}} title="Cerrar sesión"><Ic d={ic.logout} s={16} c="var(--g5)"/></button>}
           </div>
         </div>
       </nav>
@@ -537,6 +675,38 @@ export default function App(){
         </div>}
       </div>}
 
+      {/* MEMBER PORTAL */}
+      {page==="portal"&&memberUser&&<div style={{...W,paddingTop:40,paddingBottom:60}}>
+        <div className="rise" style={{display:"flex",alignItems:"center",gap:10,marginBottom:28}}><div style={{width:44,height:44,borderRadius:10,background:"#e8f0fe",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic d={ic.users} s={22} c="var(--acc)"/></div><div><h2 style={{fontSize:26,fontFamily:"var(--fh)",fontWeight:800}}>Hola, {memberUser.first_name}</h2><p style={{fontSize:13,color:"var(--g5)"}}>{memberUser.email} · {memberUser.claf_num||"Socio"}</p></div></div>
+        <div className="rise" style={{display:"flex",gap:0,borderBottom:"2px solid var(--g2)",marginBottom:24}}>{[["perfil","Mi Perfil",ic.edit],["eventos","Eventos",ic.cal],["carnet","Mi Carnet",ic.lock]].map(([k,l,d])=> <button key={k} onClick={()=>setPortalTab(k)} style={{padding:"13px 22px",background:"none",border:"none",borderBottom:portalTab===k?"2px solid var(--acc)":"2px solid transparent",marginBottom:-2,cursor:"pointer",fontSize:14,fontFamily:"var(--fh)",fontWeight:portalTab===k?700:500,color:portalTab===k?"var(--acc)":"var(--g5)",display:"flex",alignItems:"center",gap:7}}><Ic d={d} s={16} c={portalTab===k?"var(--acc)":"var(--g3)"}/>{l}</button>)}</div>
+
+        {portalTab==="perfil"&&<div className="rise"><PortalProfile member={memberUser} onSave={updateMyProfile}/></div>}
+
+        {portalTab==="eventos"&&<div className="rise">
+          <p style={{fontSize:14,color:"var(--g5)",marginBottom:20}}>Inscribete o retira tu inscripcion de los proximos eventos del club.</p>
+          <div className="mob-grid2" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:16}}>
+            {events.filter(ev=>ev.date>=now).sort((a,b)=>a.date.localeCompare(b.date)).map(ev=>{
+              const isReg=regs.some(r=>r.event_id===ev.id&&r.member_id===memberUser.id);
+              const count=getRegs(ev.id).length;
+              return <div key={ev.id} style={{border:"1px solid var(--g2)",borderRadius:8,overflow:"hidden"}}>
+                <EvImg src={ev.image} h={120}/>
+                <div style={{padding:"16px 20px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><EvBadge type={ev.type}/><span style={{fontSize:11,color:"var(--g5)"}}>{count}/{ev.max_participants||"--"}</span></div>
+                  <h3 style={{fontSize:16,fontFamily:"var(--fh)",fontWeight:700,marginBottom:4}}>{ev.title}</h3>
+                  <div style={{fontSize:12,color:"var(--g7)",marginBottom:4}}>{fmtD(ev.date)} {ev.time&&`· ${ev.time}`}</div>
+                  <div style={{fontSize:12,color:"var(--g5)",marginBottom:12}}>{ev.city}</div>
+                  <button className="bh" onClick={()=>toggleMyEvent(ev.id)} style={isReg?{...BD,width:"100%"}:{...BP,width:"100%"}}>{isReg?"Retirar inscripcion":"Inscribirme"}</button>
+                </div>
+              </div>;
+            })}
+          </div>
+        </div>}
+
+        {portalTab==="carnet"&&<div className="rise" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:20}}>
+          <MembershipCard member={memberUser}/>
+        </div>}
+      </div>}
+
       {/* ADMIN */}
       {page==="admin"&&isAdmin&&<div style={{...W,paddingTop:40,paddingBottom:60}}>
         <div className="rise" style={{display:"flex",alignItems:"center",gap:10,marginBottom:28}}><div style={{width:44,height:44,borderRadius:10,background:"#e8f0fe",display:"flex",alignItems:"center",justifyContent:"center"}}><Ic d={ic.settings} s={22} c="var(--acc)"/></div><div><h2 style={{fontSize:26,fontFamily:"var(--fh)",fontWeight:800}}>Administración</h2><p style={{fontSize:13,color:"var(--g5)"}}>{user?.email}</p></div></div>
@@ -578,6 +748,7 @@ export default function App(){
       <Modal open={!!modalM} onClose={()=>setModalM(null)} title={modalM==="new"?"Nuevo Miembro":"Editar Miembro"} wide><MemberForm member={modalM!=="new"?modalM:null} onSave={saveMember} onCancel={()=>setModalM(null)}/></Modal>
       <Modal open={!!modalE} onClose={()=>setModalE(null)} title={modalE==="new"?"Crear Evento":"Editar Evento"}><EventForm event={modalE!=="new"?modalE:null} onSave={saveEvent} onCancel={()=>setModalE(null)}/></Modal>
       <Modal open={!!modalP} onClose={()=>setModalP(null)} title={modalP==="new"?"Nuevo Aliado":"Editar Aliado"}><PartnerForm partner={modalP!=="new"?modalP:null} onSave={savePartner} onCancel={()=>setModalP(null)}/></Modal>
+      {showMemberAuth&&<MemberAuthModal mode={showMemberAuth} onSwitch={setShowMemberAuth} onLogin={memberLogin} onRegister={memberRegister} onClose={()=>setShowMemberAuth(null)}/>}
       <Modal open={!!viewM} onClose={()=>{setViewM(null);setShowCard(false)}} title={showCard?"Carnet":"Detalle del Miembro"} footer={isAdmin&&<><button className="bh" style={BD} onClick={()=>setDel({t:"m",id:viewM?.id})}>Eliminar</button><button className="bh" style={BF} onClick={()=>{setViewM(null);setShowCard(false)}}>Cerrar</button></>}>{viewM&&<MemberDetail member={viewM} onEdit={m=>{setViewM(null);setModalM(m)}} showCard={showCard} setShowCard={setShowCard}/>}</Modal>
 
       {/* Event detail with registrations */}
